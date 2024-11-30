@@ -1,3 +1,3 @@
 module.exports = {
-  presets: ["@vue/cli-plugin-babel/preset"],
-};
+  transpileDependencies: true  // or specify an array of specific dependencies
+}

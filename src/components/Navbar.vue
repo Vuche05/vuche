@@ -34,60 +34,51 @@ export default {
   name: "App",
   data() {
     return {
-      isLoggedIn: false,
-      userName: null,
-      menuActive: false,
-      isScrolled: false,
+      isLoggedIn: false, // Trạng thái đăng nhập
+      userName: null, // Tên người dùng sau khi đăng nhập
+      menuActive: false, // Trạng thái của menu (hiển thị/ẩn menu)
+      isScrolled: false, // Trạng thái cuộn trang
     };
   },
   watch: {
-    // Watch for changes to the login status and react accordingly
+    // Theo dõi thay đổi của trạng thái đăng nhập
     isLoggedIn(newVal) {
       if (newVal) {
-        this.fetchUserData();
+        this.fetchUserData(); // Lấy thông tin người dùng khi đăng nhập
       } else {
-        this.userName = null;
+        this.userName = null; // Xóa tên người dùng khi đăng xuất
       }
     },
   },
   created() {
-    // Check if token exists in localStorage and set isLoggedIn accordingly
+    // Kiểm tra token và trạng thái đăng nhập khi khởi tạo
     const token = localStorage.getItem("token");
     if (token) {
-      this.isLoggedIn = true; // User is logged in
+      this.isLoggedIn = true;
       this.fetchUserData();
-    } else {
-      this.isLoggedIn = false; // User is not logged in
     }
   },
   methods: {
     async logout() {
       try {
-        // Ensure the user is logged in before attempting to log out
         const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Bạn chưa đăng nhập.");
-          return;
+        if (token) {
+          // Gửi yêu cầu tới API logout
+          await this.$axios.post(
+            "/api/logout",
+            {}, // Nếu không cần body, để trống
+            { headers: { Authorization: `Bearer ${token}` } } // Đính kèm token trong header
+          );
         }
-
-        // Make an API request to log out the user
-        await this.$axios.post(
-          "/api/logout",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        // Remove token and set isLoggedIn to false
+        // Xóa token và cập nhật trạng thái đăng xuất
         localStorage.removeItem("token");
         this.isLoggedIn = false;
-        this.userName = null;
-
-        // Redirect to login page
-        this.$router.push("/login");
+        this.userName = null; // Reset dữ liệu người dùng
+        this.$router.push("/login"); // Chuyển hướng về trang login
         alert("Đăng xuất thành công");
       } catch (error) {
         console.error("Đăng xuất thất bại:", error);
-        alert("Đăng xuất thất bại. Vui lòng thử lại!");
+        alert("Đăng xuất thất bại. Vui lòng thử lại!"); // Hiển thị thông báo lỗi
       }
     },
 
@@ -96,21 +87,23 @@ export default {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token không tồn tại.");
 
-        // Fetch user data from API
+        // Gửi yêu cầu để lấy thông tin người dùng
         const response = await this.$axios.get("/api/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        this.userName = response.data.name;
+        this.userName = response.data.name; // Cập nhật tên người dùng
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng:", error);
-        this.logout(); // Logout if there's an error fetching user data
+        this.logout(); // Đăng xuất nếu không lấy được thông tin
       }
     },
 
+    // Toggle trạng thái menu khi nhấn vào hamburger
     toggleMenu() {
       this.menuActive = !this.menuActive;
     },
 
+    // Thực hiện theo dõi cuộn trang để thay đổi màu nền của thanh điều hướng
     handleScroll() {
       if (window.scrollY > 50) {
         this.isScrolled = true;
@@ -120,12 +113,10 @@ export default {
     },
   },
   mounted() {
-    // Listen to scroll events
-    window.addEventListener("scroll", this.handleScroll);
+    window.addEventListener("scroll", this.handleScroll); // Lắng nghe sự kiện cuộn trang
   },
   beforeUnmount() {
-    // Remove scroll event listener before component is destroyed
-    window.removeEventListener("scroll", this.handleScroll);
+    window.removeEventListener("scroll", this.handleScroll); // Dọn dẹp khi component bị huỷ
   },
 };
 </script>
